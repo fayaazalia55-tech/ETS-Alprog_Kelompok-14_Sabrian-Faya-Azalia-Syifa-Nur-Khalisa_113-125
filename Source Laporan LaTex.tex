@@ -1,0 +1,160 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[bahasa]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+% --- KONFIGURASI WARNA & KODE RUST ---
+\definecolor{rust_keyword}{RGB}{180, 60, 60}
+\definecolor{rust_string}{RGB}{60, 120, 60}
+\definecolor{rust_comment}{RGB}{130, 130, 130}
+\definecolor{backcolour}{rgb}{0.98, 0.98, 0.95}
+
+\lstset{
+    language=Rust,
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{rust_comment}\itshape,
+    keywordstyle=\color{rust_keyword}\bfseries,
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{rust_string},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=8pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    frame=single,
+    rulecolor=\color{black!10}
+}
+
+% Format Judul Bab
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\bfseries}{\thesubsection.}{0.5em}{}
+
+\begin{document}
+
+% --- HALAMAN SAMPUL ---
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    \Large \textbf{LAPORAN EVALUASI TENGAH SEMESTER (ETS)}\\
+    \Large \textbf{ALGORITMA DAN PEMROGRAMAN}\\
+    \vspace{1.5cm}
+    \large \textit{Implementasi Sistem Monitoring Level Tangki Otomatis Berbasis Memory-Safe Language (Rust)}\\
+    \vspace{1.5cm}
+    \includegraphics[width=0.5\textwidth]{image.png} \\
+    \vspace{2cm}
+    
+    \textbf{Disusun Oleh:}\\
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{ll}
+            Sabrina Faya Azalia & 2042251113 \\
+            Syifa Nur Khalisa   & 2042251125 \\
+        \end{tabular}
+    \end{table}
+    
+    \vfill
+    \textbf{Departemen Teknik Instrumentasi}\\
+    \textbf{Fakultas Vokasi}\\
+    \textbf{Institut Teknologi Sepuluh Nopember}\\
+    \textbf{2026}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\newpage
+
+% --- BAB I: PENDAHULUAN ---
+\section{PENDAHULUAN}
+\subsection{Latar Belakang}
+Dalam operasional industri modern, pemantauan level cairan dalam tangki penyimpanan merupakan parameter krusial yang menentukan kelancaran proses produksi. Ketidakakuratan dalam pemantauan dapat mengakibatkan risiko fatal, mulai dari kavitasi pompa akibat tangki kosong hingga pencemaran lingkungan akibat overflow. Seiring dengan perkembangan Industry 4.0, kebutuhan akan sistem monitoring yang tidak hanya akurat tetapi juga memiliki performa tinggi dan keamanan memori (memory safety) menjadi prioritas utama. 
+
+Bahasa pemrograman Rust hadir sebagai solusi modern dalam pengembangan sistem tertanam (embedded systems) dan instrumentasi. Rust menawarkan keunggulan dalam manajemen memori tanpa garbage collector, yang menjamin sistem berjalan dengan latensi rendah dan bebas dari runtime errors yang umum terjadi pada bahasa C/C++. Laporan ini membahas rancangan sistem simulasi monitoring level tangki yang mengintegrasikan algoritma Linear Congruential Generator (LCG) untuk simulasi data sensor dan logika kontrol otomatis.
+
+\subsection{Tujuan}
+Tujuan dari proyek ini adalah merancang perangkat lunak simulasi monitoring level tangki yang handal, memiliki validasi data yang ketat, dan mampu memberikan keputusan kontrol (ON/OFF) secara otomatis berdasarkan parameter yang ditentukan menggunakan bahasa pemrograman Rust.
+
+\section{STUDI KASUS INSTRUMENTASI}
+\subsection{Deskripsi Sistem}
+Studi kasus yang diangkat dalam proyek ini adalah Sistem Monitoring dan Kontrol Level Tangki Industri Otomatis. Sistem ini dirancang untuk mensimulasikan pemantauan ketinggian fluida dalam sebuah tangki penyimpanan secara real-time menggunakan sensor ultrasonik sebagai input utama.  Masalah utama yang ingin diselesaikan adalah risiko kegagalan operasional akibat human error dalam pemantauan manual, seperti:
+\begin{itemize}
+    \item \textbf{Overflow (Meluap):} Cairan melebihi kapasitas tangki yang dapat menyebabkan kerusakan lingkungan atau pemborosan bahan baku.
+    \item \textbf{Dry Running (Kekosongan):} Tangki kosong yang dapat menyebabkan kavitasi dan kerusakan permanen pada pompa.
+\end{itemize}
+
+\subsection{Parameter Instrumentasi}
+Sistem ini menggunakan beberapa parameter teknis sebagai batasan kontrol (setpoint):
+\begin{itemize}
+    \item \textbf{Input Skala:} Skala 0\% hingga 100% dari total kapasitas tangki.
+    \item \textbf{Threshold Bawah (Low Level):} Ditetapkan pada 20\%. Jika level di bawah angka ini, sistem harus memerintahkan pompa untuk menyala (ON).
+    \item \textbf {Threshold Atas (High Level):} Ditetapkan pada 90\%. Jika level di atas angka ini, sistem harus mematikan pompa (OFF) dan mengaktifkan alarm kritis.
+\end{itemize}
+    
+\subsection{Implementasi Komputasi Numerik}
+Untuk meningkatkan akurasi, studi kasus ini mengintegrasikan metode Moving Average (Rata-rata Bergerak). Hal ini berfungsi untuk menyaring noise atau fluktuasi data sesaat yang sering terjadi pada sensor ultrasonik di lapangan, sehingga keputusan kontrol yang diambil oleh pompa menjadi lebih stabil dan tidak mudah berganti status secara mendadak (chattering).
+
+% 4. ALGORITMA DAN FLOWCHART (Sesuai poin 155) [cite: 155]
+\section{ALGORITMA DAN FLOWCHART}
+\subsection{Algoritma Sistem}
+\begin{enumerate}
+    \item Inisialisasi struct \texttt{Sensor}, \texttt{Controller}, dan \texttt{MonitoringSystem}[cite: 107].
+    \item Input durasi interval monitoring dari pengguna.
+    \item Loop pembacaan data sensor menggunakan simulasi LCG.
+    \item Validasi data (0-100) dan filter \textit{Moving Average}.
+    \item Evaluasi kondisi terhadap threshold dan eksekusi status pompa.
+\end{enumerate}
+
+\subsection{Flowchart}
+
+\begin{figure}[h] 
+\centering
+\includegraphics[width=0.5\textwidth]{flowchart.png} 
+\caption{Alur logika sistem monitoring level tangki.}
+\end{figure}
+
+% 5. PENJELASAN PROGRAM RUST (Sesuai poin 156) [cite: 156]
+\section{PENJELASAN PROGRAM RUST}
+Program ini menggunakan paradigma Object-Oriented Programming (OOP) di Rust untuk mensimulasikan monitoring level tangki secara real-time. Sistem dibagi menjadi tiga komponen utama: Sensor untuk simulasi data, Controller untuk logika keputusan pompa (ON/OFF), dan MonitoringSystem sebagai pengelola seluruh proses.
+
+Fokus utama program adalah stabilitas kontrol melalui metode Moving Average yang menyaring gangguan (noise) pada data sensor. Dengan dukungan fitur memory safety dari Rust, program menjamin eksekusi yang aman, efisien, dan bebas dari error runtime selama proses pemantauan berlangsung.
+
+\section{KONSEP OOP}
+Implementasi pemrograman berbasis objek dilakukan menggunakan \texttt{struct} dan \texttt{impl}:
+\begin{itemize}
+    \item \textbf{Struct Sensor:} Mengelola identitas fisik dan pembacaan sensor[cite: 108].
+    \item \textbf{Struct Controller:} Bertanggung jawab atas logika pengambilan keputusan (\textit{Control Logic})[cite: 109].
+    \item \textbf{Struct MonitoringSystem:} Sebagai kontainer utama yang mengintegrasikan seluruh komponen[cite: 110].
+\end{itemize}
+
+% 7. IMPLEMENTASI KOMPUTASI NUMERIK (Sesuai poin 158) [cite: 158]
+\section{IMPLEMENTASI KOMPUTASI NUMERIK}
+Sistem ini mengimplementasikan metode Moving Average (Rata-rata Bergerak) untuk mengolah data mentah dari simulasi sensor. Dalam instrumentasi industri, data sensor seringkali mengandung noise atau fluktuasi yang tidak stabil. Jika data ini langsung digunakan sebagai acuan kontrol, pompa akan sering berganti status secara mendadak (chattering) yang dapat mempercepat kerusakan mekanis pada perangkat.
+
+Algoritma ini bekerja dengan menghitung rata-rata aritmatika dari sekumpulan data terakhir yang disimpan dalam struktur Vector. Dengan teknik ini, nilai level yang dihasilkan menjadi lebih halus dan stabil. Hal ini memastikan keputusan kontrol (ON/OFF) didasarkan pada tren perubahan level yang sebenarnya, sehingga tercipta sistem pemantauan yang lebih presisi dan aman bagi perangkat keras.
+
+% 8. HASIL PENGUJIAN (Sesuai poin 159) [cite: 159]
+\section{HASIL PENGUJIAN}
+\includegraphics[width=1\textwidth]{ss.png} 
+
+% 9. ANALISIS HASIL (Sesuai poin 160) [cite: 160]
+\section{ANALISIS HASIL}
+Berdasarkan hasil pengujian, sistem kontrol bekerja secara akurat sesuai dengan parameter threshold yang ditetapkan. Saat level air berada di bawah 20\%, sistem secara otomatis mengubah status pompa menjadi ON, dan ketika level melebihi 90\%, sistem memberikan peringatan alarm serta mematikan pompa. Hal ini menunjukkan bahwa logika on-off dengan histeresis berhasil mencegah kegagalan operasional seperti tangki kosong atau meluap.
+
+Dari sisi pemrosesan data, penggunaan metode Moving Average terbukti efektif dalam memperhalus fluktuasi angka yang dihasilkan oleh simulasi sensor. Filter ini mencegah pompa berganti status terlalu cepat akibat gangguan data sesaat (noise), sehingga sistem menjadi lebih stabil. Selain itu, fitur memory safety pada Rust memastikan program berjalan tanpa kendala performa atau kebocoran memori selama siklus monitoring berlangsung.
+
+% 10. KESIMPULAN (Sesuai poin 161) [cite: 161]
+\section{KESIMPULAN}
+Sistem monitoring level tangki berbasis Rust telah berhasil diimplementasikan dengan mengintegrasikan logika kontrol otomatis dan pengolahan data numerik. Penggunaan struktur data berbasis objek (struct) mempermudah manajemen komponen sensor dan kontroler, sementara mekanisme thresholding (20\% dan 90\%) terbukti akurat dalam menjalankan fungsi proteksi tangki secara otomatis.
+
+Penerapan metode Moving Average secara efektif meningkatkan stabilitas sistem dengan meminimalisir fluktuasi data simulasi. Secara keseluruhan, pemilihan bahasa Rust memberikan jaminan keamanan memori dan performa yang handal, menjadikan sistem ini solusi yang tepat untuk pemantauan cairan di sektor industri.
+
+\end{document}
